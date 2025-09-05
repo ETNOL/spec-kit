@@ -51,7 +51,9 @@ import readchar
 AI_CHOICES = {
     "copilot": "GitHub Copilot",
     "claude": "Claude Code",
-    "gemini": "Gemini CLI"
+    "gemini": "Gemini CLI",
+    "cursor": "Cursor CLI",
+    "cursor-ide": "Cursor IDE"
 }
 
 # ASCII Art Banner
@@ -737,8 +739,14 @@ def init(
             if not check_tool("gemini", "Install from: https://github.com/google-gemini/gemini-cli"):
                 console.print("[red]Error:[/red] Gemini CLI is required for Gemini projects")
                 agent_tool_missing = True
+        elif selected_ai == "cursor":
+            if not check_tool("cursor", "Install from: https://github.com/cursor/cursor-cli"):
+                console.print("[red]Error:[/red] Cursor CLI is required for Cursor CLI projects")
+                agent_tool_missing = True
+        elif selected_ai == "cursor-ide":
+            # Cursor IDE is an application, not a CLI tool, so skip tool check
+            pass
         # GitHub Copilot check is not needed as it's typically available in supported IDEs
-        
         if agent_tool_missing:
             console.print("\n[red]Required AI tool is missing![/red]")
             console.print("[yellow]Tip:[/yellow] Use --ignore-agent-tools to skip this check")
@@ -823,6 +831,13 @@ def init(
         steps_lines.append("   - See GEMINI.md for all available commands")
     elif selected_ai == "copilot":
         steps_lines.append(f"{step_num}. Open in Visual Studio Code and use [bold cyan]/specify[/], [bold cyan]/plan[/], [bold cyan]/tasks[/] commands with GitHub Copilot")
+    elif selected_ai == "cursor":
+        steps_lines.append(f"{step_num}. Use / commands with Cursor CLI")
+        steps_lines.append("   - Run cursor /specify to create specifications")
+        steps_lines.append("   - Run cursor /plan to create implementation plans")
+        steps_lines.append("   - See CURSOR.md for all available commands")
+    elif selected_ai == "cursor-ide":
+        steps_lines.append(f"{step_num}. Open in Cursor IDE and use [bold cyan]/specify[/], [bold cyan]/plan[/], [bold cyan]/tasks[/] commands with Cursor IDE")
 
     step_num += 1
     steps_lines.append(f"{step_num}. Update [bold magenta]CONSTITUTION.md[/bold magenta] with your project's non-negotiable principles")
@@ -855,11 +870,12 @@ def check():
     console.print("\n[cyan]Optional AI tools:[/cyan]")
     claude_ok = check_tool("claude", "Install from: https://docs.anthropic.com/en/docs/claude-code/setup")
     gemini_ok = check_tool("gemini", "Install from: https://github.com/google-gemini/gemini-cli")
+    cursor_ok = check_tool("cursor", "Install from: https://github.com/cursor/cursor-cli")
     
     console.print("\n[green]✓ Specify CLI is ready to use![/green]")
     if not git_ok:
         console.print("[yellow]Consider installing git for repository management[/yellow]")
-    if not (claude_ok or gemini_ok):
+    if not (claude_ok or gemini_ok or cursor_ok):
         console.print("[yellow]Consider installing an AI assistant for the best experience[/yellow]")
 
 
