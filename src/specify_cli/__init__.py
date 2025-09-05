@@ -387,11 +387,10 @@ def init_git_repo(project_path: Path, quiet: bool = False) -> bool:
         os.chdir(original_cwd)
 
 
-def download_template_from_github(ai_assistant: str, download_dir: Path, *, verbose: bool = True, show_progress: bool = True):
+def download_template_from_github(ai_assistant: str, download_dir: Path, *, verbose: bool = True, show_progress: bool = True, repo_owner: str = "github"):
     """Download the latest template release from GitHub using HTTP requests.
     Returns (zip_path, metadata_dict)
     """
-    repo_owner = "github"
     repo_name = "spec-kit"
     
     if verbose:
@@ -485,7 +484,7 @@ def download_template_from_github(ai_assistant: str, download_dir: Path, *, verb
     return zip_path, metadata
 
 
-def download_and_extract_template(project_path: Path, ai_assistant: str, is_current_dir: bool = False, *, verbose: bool = True, tracker: StepTracker | None = None) -> Path:
+def download_and_extract_template(project_path: Path, ai_assistant: str, is_current_dir: bool = False, *, verbose: bool = True, tracker: StepTracker | None = None, repo_owner: str = "github") -> Path:
     """Download the latest release and extract it to create a new project.
     Returns project_path. Uses tracker if provided (with keys: fetch, download, extract, cleanup)
     """
@@ -499,7 +498,8 @@ def download_and_extract_template(project_path: Path, ai_assistant: str, is_curr
             ai_assistant,
             current_dir,
             verbose=verbose and tracker is None,
-            show_progress=(tracker is None)
+            show_progress=(tracker is None),
+            repo_owner=repo_owner
         )
         if tracker:
             tracker.complete("fetch", f"release {meta['release']} ({meta['size']:,} bytes)")
@@ -640,10 +640,11 @@ def download_and_extract_template(project_path: Path, ai_assistant: str, is_curr
 @app.command()
 def init(
     project_name: str = typer.Argument(None, help="Name for your new project directory (optional if using --here)"),
-    ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude, gemini, or copilot"),
+    ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude, gemini, copilot, cursor, or cursor-ide"),
     ignore_agent_tools: bool = typer.Option(False, "--ignore-agent-tools", help="Skip checks for AI agent tools like Claude Code"),
     no_git: bool = typer.Option(False, "--no-git", help="Skip git repository initialization"),
     here: bool = typer.Option(False, "--here", help="Initialize project in the current directory instead of creating a new one"),
+    repo_owner: str = typer.Option("github", "--repo-owner", help="GitHub repo owner for template download (default: github)")
 ):
     """
     Initialize a new Specify project from the latest template.
@@ -778,7 +779,7 @@ def init(
     with Live(tracker.render(), console=console, refresh_per_second=8, transient=True) as live:
         tracker.attach_refresh(lambda: live.update(tracker.render()))
         try:
-            download_and_extract_template(project_path, selected_ai, here, verbose=False, tracker=tracker)
+            download_and_extract_template(project_path, selected_ai, here, verbose=False, tracker=tracker, repo_owner=repo_owner)
 
             # Git step
             if not no_git:
